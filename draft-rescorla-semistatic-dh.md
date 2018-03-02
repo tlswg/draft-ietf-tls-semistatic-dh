@@ -1,7 +1,7 @@
 ---
 title: Semi-Static Diffie-Hellman Key Establishment for TLS 1.3
 abbrev: TLS 1.3 Semi-Static KX
-docname: draft-rescorla-semistatic-dh
+docname: draft-rescorla-semistatic-dh-latest
 category: std
 
 ipr: trust200902
