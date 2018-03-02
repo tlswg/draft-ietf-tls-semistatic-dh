@@ -257,7 +257,8 @@ that 0 is replaced with SS, as shown below.
 
 # Client Authentication
 
-[[OPEN ISSUE]] In principle, we can do client authentication the same way.
+[[OPEN ISSUE]] In principle, we can do client authentication the same way,
+with the client's DH key in Certificate and a MAC in CertificateVerity.
 However, it's less good because the client's static key doesn't get mixed
 in at all. Also, client DH keys seem even further off.
 
