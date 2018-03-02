@@ -55,12 +55,8 @@ TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
 exchange modelled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
 common situation for current TLS servers. This document describes
-a mode of TLS 1.3 in which endpoints have a certified DH key which
-is used to authenticate the exchange.
-
-
-
-
+a mode of TLS 1.3 in which one or both endpoints have a certified 
+DH key which is used to authenticate the exchange.
 
 --- middle
 
@@ -115,12 +111,11 @@ exchange in TLS 1.3, specifically:
   the existence of the communication. Note that it could always
   have denied the contents of the communication.
 
-Note that this exchange is not generally faster than a signed
+This exchange is not generally faster than a signed
 exchange if comparable groups are used. In fact, if delegated
 credentials are used, it may be slower on the client as it has
 to validate the delegated credential, though this operation
 is cacheable.
-
 
 # Protocol Overview
 
@@ -199,7 +194,6 @@ Before sending and upon receipt, endpoints MUST ensure that the
 signature scheme is consistent with the ephemeral (EC)DH group
 in use.
 
-
 # Certificate Format
 
 Like signing keys, static DH keys are carried in the Certificate
@@ -216,7 +210,14 @@ details about these formats.
 
 Instead of a signature, the server proves knowledge of the private
 key associated with its static share by computing a MAC over the
-handshake transcript using SS. Specifically, the server computes:
+handshake transcript using SS. The transcript thus far includes all 
+messages up to and including Certificate, i.e.:
+
+~~~
+Transcript-Hash(Handshake Context, Certificate)
+~~~
+
+The MAC key -- SS-Base-Key -- is derived from SS as follows:
 
 ~~~~
     SS-Base-Key = HKDF-Extract(0, SS)
@@ -224,21 +225,21 @@ handshake transcript using SS. Specifically, the server computes:
 
 The MAC is then computed using the Finished computation described
 in {{I-D.ietf-tls-tls13}} Section 4.4, with SS-Base-Key as the
-Base Key value and Receivers MUST validate the MAC and terminate
-the handshake witha  "decrypt_error" alert.
+Base Key value. Receivers MUST validate the MAC and terminate
+the handshake with a "decrypt_error" alert upon failure.
 
-Note that this means that the server sends two Finished-type
-computations in the handshake, one using SS and one using the Master
-Secret. These MACs serve different purposes: the first authenticates
-the handshake and the second proves possession of the ephemeral
-secret. [[TODO: Hugo: can you verify that this is OK because neither
-MAC is computed with a mixed key?]]
+Note that this means that the server sends two MAC computations in 
+the handshake, one in CertificateVerify using SS and the other in 
+Finished using the Master Secret. These MACs serve different 
+purposes: the first authenticates the handshake and the second proves 
+possession of the ephemeral secret. 
+[[TODO: Hugo: can you verify that this is OK because neither MAC is computed with a mixed key?]]
 
 ## Key Schedule
 
 The final HKDF-Extract stage of the TLS 1.3 key schedule has
-an HKDF-Extract with the IKM of 0. When this mode is in use,
-that 0 is replaced with SS, as shown below.
+an HKDF-Extract with the IKM of 0. When static key exchange 
+is negotiated, that 0 is replaced with SS, as shown below.
 
 ~~~~
 ...
