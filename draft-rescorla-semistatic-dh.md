@@ -118,6 +118,98 @@ to validate the delegated credential, though this operation
 is cacheable.
 
 
+# Protocol Overview
+
+The overall protocol flow remains the same as that in ordinary TLS 1.3,
+as shown below:
+
+~~~~
+       Client                                               Server
+
+Key  ^ ClientHello
+Exch | + key_share*
+     | + signature_algorithms*
+     | + psk_key_exchange_modes*
+     v + pre_shared_key*         -------->
+                                                       ServerHello  ^ Key
+                                                      + key_share*  | Exch
+                                                 + pre_shared_key*  v
+                                             {EncryptedExtensions}  ^  Server
+                                             {CertificateRequest*}  v  Params
+                                                    {Certificate*}  ^
+                                              {CertificateVerify*}  | Auth
+                                                        {Finished}  v
+                                 <--------     [Application Data*]
+     ^ {Certificate*}
+Auth | {CertificateVerify*}
+     v {Finished}                -------->
+       [Application Data]        <------->      [Application Data]
+~~~~
+
+As usual, the client and server each supply an (EC)DH share in their
+"key_share" extensions. However, in addition, the server supplies a
+static (EC)DH share in its Certificate message, either directly in
+its end-entity certificate or in a delegated credential. The client
+and server then perform two (EC)DH exchanges:
+
+- Between the client and server "key_share" values to form an
+  ephemeral secret (ES). This is the same value as is computed
+  in TLS 1.3 currently.
+
+- Between the client's "key_share" and the server's static
+  share, to form a static secret (SS).
+
+Note that this means that the server's static secret MUST be in
+the same group as selected group for the ephemeral (EC)DH exchange.
+
+The handshake then proceeds as usual, except that:
+
+* Instead of containing a signature, the CertificateVerify contains
+  a MAC of the handshake transcript, computed based on SS.
+
+* SS is mixed into the key schedule at the last HKDF-Extract
+  stage (where currently a 0 is used as the IKM input).
+
+
+# Cryptographic Details
+
+## Certificate Verify Computation
+
+Instead of a signature, the server proves knowledge of the private
+key associated with its static share by computing a MAC over the
+handshake transcript using SS. Specifically, the server computes:
+
+~~~~
+    SS-Base-Key = HKDF-Extract(0, SS)
+~~~~
+
+The MAC is then computed using the Finished computation described
+in {{I-D.ietf-tls-tls13}} Section 4.4, with SS-Base-Key as the
+Base Key value.
+
+
+## Key Schedule
+
+The final HKDF-Extract stage of the TLS 1.3 key schedule has
+an HKDF-Extract with the IKM of 0. When this mode is in use,
+that 0 is replaced with SS, as shown below.
+
+~~~~
+...
+           Derive-Secret(., "derived", "")
+                 |
+                 v
+     SS -> HKDF-Extract = Master Secret
+                 |
+                 +-----> Derive-Secret(., "c ap traffic",
+                 |                     ClientHello...server Finished)
+                 |                     = client_application_traffic_secret_0
+                 |
+...
+~~~~
+
+
+
 
 # Security Considerations
 
