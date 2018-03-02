@@ -66,6 +66,10 @@ is used to authenticate the exchange.
 
 # Introduction
 
+DISCLAIMER: This is a work-in-progress draft and is currenty totally
+handwavy, so it has not yet seen significant security analysis. It
+should not be used as a basis for building production systems.
+
 TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
 exchange modelled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
@@ -171,6 +175,41 @@ The handshake then proceeds as usual, except that:
   stage (where currently a 0 is used as the IKM input).
 
 
+# Negotiation
+
+In order to negotiate this mode, we treat the (EC)DH MAC as if it were a
+signature and negotiate it with a set of new signature scheme values:
+
+~~~~
+   enum {
+     sig_p256(0x0901),
+     sig_p384(0x0902),
+     sig_p521(0x0903),
+     sig_x52219(0x0904),
+     sig_x448(0x0905),
+   } SignatureScheme;
+~~~~
+
+When present in the "signature_algorithms" extension or
+CertificateVerify.signature_scheme, these values indicate DH MAC with
+the specified key efxchange mode. These values MUST NOT appear
+in "signature_algorithms_cert".
+
+Before sending and upon receipt, endpoints MUST ensure that the
+signature scheme is consistent with the ephemeral (EC)DH group
+in use.
+
+
+# Certificate Format
+
+Like signing keys, static DH keys are carried in the Certificate
+message, either directly in the EE certificate, or in a delegated
+credential. In either case, the OID for the SubjectPublicKeyInfo
+MUST be appropriate for use with (EC)DH key establishment. If
+in a certificate, the key usage and EKU MUST also be set appropriately
+See {{I-D.ietf-curdle-pkix}} and [[TBD: P-256, etc.]] for specific
+details about these formats.
+
 # Cryptographic Details
 
 ## Certificate Verify Computation
@@ -185,8 +224,15 @@ handshake transcript using SS. Specifically, the server computes:
 
 The MAC is then computed using the Finished computation described
 in {{I-D.ietf-tls-tls13}} Section 4.4, with SS-Base-Key as the
-Base Key value.
+Base Key value and Receivers MUST validate the MAC and terminate
+the handshake witha  "decrypt_error" alert.
 
+Note that this means that the server sends two Finished-type
+computations in the handshake, one using SS and one using the Master
+Secret. These MACs serve different purposes: the first authenticates
+the handshake and the second proves possession of the ephemeral
+secret. [[TODO: Hugo: can you verify that this is OK because neither
+MAC is computed with a mixed key?]]
 
 ## Key Schedule
 
@@ -209,9 +255,30 @@ that 0 is replaced with SS, as shown below.
 ~~~~
 
 
+# Client Authentication
+
+[[OPEN ISSUE]] In principle, we can do client authentication the same way.
+However, it's less good because the client's static key doesn't get mixed
+in at all. Also, client DH keys seem even further off.
+
+
+# 0-RTT
+
+[[OPEN ISSUE]] It seems like one ought to be able to publish the server's
+static key and use it for 0-RTT, but actually we don't know how to
+do the publication piece, so I think we should leave this out for now.
 
 
 # Security Considerations
+
+[TODO before submission]
+
+# IANA Considerations
+
+IANA [SHOULD add/has added] the new code points specified
+in {{negotiation}} to the TLS 1.3 signature scheme registry, with
+a "recommended" value of TBD.
+
 
 
 --- back
