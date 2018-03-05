@@ -232,8 +232,10 @@ Note that this means that the server sends two MAC computations in
 the handshake, one in CertificateVerify using SS and the other in 
 Finished using the Master Secret. These MACs serve different 
 purposes: the first authenticates the handshake and the second proves 
-possession of the ephemeral secret. 
-[[TODO: Hugo: can you verify that this is OK because neither MAC is computed with a mixed key?]]
+possession of the ephemeral secret.
+[[OPEN ISSUE: Verify that this is OK because neither MAC is computed
+with the mixed key. At least one version of OPTLS was somewhat like that,
+however.]]
 
 ## Key Schedule
 
@@ -273,7 +275,18 @@ do the publication piece, so I think we should leave this out for now.
 
 # Security Considerations
 
-[TODO before submission]
+[[OPEN ISSUE: This is a -00, so the security considerations are kind of sketchy.]]
+
+- This is intended to have roughly equivalent security properties to current TLS 1.3,
+except for the points raised in the introduction.
+
+- There are open questions about how much key mixing we want to do.
+
+- I'm not sure I like the double extract of SS. I've looked it over and
+  the SS-Base-Key and the HKDF-Extract to make the MS should be independent,
+  but I'd like to give it another look-over to see if there is a cleaner
+  way to do it.
+
 
 # IANA Considerations
 
