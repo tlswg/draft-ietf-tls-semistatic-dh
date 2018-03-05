@@ -280,7 +280,8 @@ do the publication piece, so I think we should leave this out for now.
 - This is intended to have roughly equivalent security properties to current TLS 1.3,
 except for the points raised in the introduction.
 
-- There are open questions about how much key mixing we want to do.
+- There are open questions about how much key mixing we want to do, especially with
+respect to client authentication.
 
 - I'm not sure I like the double extract of SS. I've looked it over and
   the SS-Base-Key and the HKDF-Extract to make the MS should be independent,
