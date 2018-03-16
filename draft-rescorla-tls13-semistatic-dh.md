@@ -258,19 +258,51 @@ is negotiated, that 0 is replaced with SS, as shown below.
 ~~~~
 
 
+# 0-RTT
+
+Clients in possession of a cached server's static share may use it to mix into
+the Early Secret computation. Specifically, let ESS be the output (EC)DHE
+output from the client's ephemeral Diffie Hellman share and server's 
+semi-static key share. Derivation of the Early Secret then becomes:
+
+~~~
+                 0
+                 |
+                 v
+   ESS ->  HKDF-Extract = Early Ephemeral Secret (not used)
+                 |
+                 +
+           Derive-Secret(., "derived", "")
+                 |
+                 v
+   PSK ->  HKDF-Extract = Early Secret
+                 |
+                 \/
+~~~
+
+When a client uses a specific key share for early data, it MUST NOT send
+more than one SignatureScheme value in its ClientHello. The chosen 
+SignatureScheme value MUST match that which was in the cached server's
+semi static key share. If the server cannot verify integrity of the early 
+data, the server MUST reject early data, and follow remaining rules for 
+processing early data as outlined in {{I-D.ietf-tls-tls13}}.
+
+Note that this approach deviates from OPTLS in that PSK is not replaced
+with ESS. It is used to seed PSK-based key derivation. This allows clients
+with an external PSK and cached semi-static key share to mix both into
+the key schedule.
+
+[[OPEN ISSUE]] Should the client instead send an explicit hint of the key share it used?
+
+[[OPEN ISSUE]] We don't know how to do bootstrap early data by publishing
+semi-static key shares.
+
 # Client Authentication
 
 [[OPEN ISSUE]] In principle, we can do client authentication the same way,
 with the client's DH key in Certificate and a MAC in CertificateVerity.
 However, it's less good because the client's static key doesn't get mixed
 in at all. Also, client DH keys seem even further off.
-
-
-# 0-RTT
-
-[[OPEN ISSUE]] It seems like one ought to be able to publish the server's
-static key and use it for 0-RTT, but actually we don't know how to
-do the publication piece, so I think we should leave this out for now.
 
 
 # Security Considerations
