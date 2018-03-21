@@ -262,23 +262,20 @@ is negotiated, that 0 is replaced with SS, as shown below.
 
 Clients in possession of a cached server's static share may use it to mix into
 the Early Secret computation. Specifically, let ESS be the output (EC)DHE
-output from the client's ephemeral Diffie Hellman share and server's 
+output from the client's ephemeral key share and server's 
 semi-static key share. Derivation of the Early Secret then becomes:
 
 ~~~
                  0
                  |
                  v
-   ESS ->  HKDF-Extract = Early Ephemeral Secret (not used)
-                 |
-                 +
-           Derive-Secret(., "derived", "")
-                 |
-                 v
-   PSK ->  HKDF-Extract = Early Secret
+   ESS ->  HKDF-Extract = Early Secret
                  |
                  \/
 ~~~
+
+This emulates the OPTLS design wherein PSK is replaced with ESS for early
+data encryption and binding.
 
 When a client uses a specific key share for early data, it MUST NOT send
 more than one SignatureScheme value in its ClientHello. The chosen 
@@ -287,15 +284,8 @@ semi static key share. If the server cannot verify integrity of the early
 data, the server MUST reject early data, and follow remaining rules for 
 processing early data as outlined in {{I-D.ietf-tls-tls13}}.
 
-Note that this approach deviates from OPTLS in that PSK is not replaced
-with ESS. It is used to seed PSK-based key derivation. This allows clients
-with an external PSK and cached semi-static key share to mix both into
-the key schedule.
-
 [[OPEN ISSUE]] Should the client instead send an explicit hint of the key share it used?
-
-[[OPEN ISSUE]] We don't know how to do bootstrap early data by publishing
-semi-static key shares.
+[[OPEN ISSUE]] We don't know how to do bootstrap early data by publishing semi-static key shares.
 
 # Client Authentication
 
