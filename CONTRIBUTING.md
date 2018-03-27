@@ -20,12 +20,12 @@ subject to a Simplified BSD License) in Contributions.
 ## Other Resources
 
 Discussion of this work occurs on the
-[semistatic working group mailing list](https://mailarchive.ietf.org/arch/browse/semistatic/)
-([subscribe](https://www.ietf.org/mailman/listinfo/semistatic)).  In addition to
+[tls13 working group mailing list](https://mailarchive.ietf.org/arch/browse/tls13/)
+([subscribe](https://www.ietf.org/mailman/listinfo/tls13)).  In addition to
 contributions in github, you are encouraged to participate in discussions there.
 
 **Note**: Some working groups adopt a policy whereby substantive discussion of
 technical issues needs to occur on the mailing list.
 
 You might also like to familiarize yourself with other
-[working group documents](https://datatracker.ietf.org/wg/semistatic/documents/).
+[working group documents](https://datatracker.ietf.org/wg/tls13/documents/).

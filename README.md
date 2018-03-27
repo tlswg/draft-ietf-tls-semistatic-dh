@@ -2,9 +2,9 @@
 
 This is the working area for the individual Internet-Draft, "".
 
-* [Editor's Copy](https://ekr.github.io/draft-rescorla-semistatic-dh/#go.draft-rescorla-semistatic-dh.html)
-* [Individual Draft](https://tools.ietf.org/html/draft-rescorla-semistatic-dh)
-* [Compare Editor's Copy to Individual Draft](https://ekr.github.io/draft-rescorla-semistatic-dh/#go.draft-rescorla-semistatic-dh.diff)
+* [Editor's Copy](https://ekr.github.io/draft-rescorla-tls13-semistatic-dh/#go.draft-rescorla-tls13-semistatic-dh.html)
+* [Individual Draft](https://tools.ietf.org/html/draft-rescorla-tls13-semistatic-dh)
+* [Compare Editor's Copy to Individual Draft](https://ekr.github.io/draft-rescorla-tls13-semistatic-dh/#go.draft-rescorla-tls13-semistatic-dh.diff)
 
 ## Building the Draft
 
@@ -21,4 +21,4 @@ This requires that you have the necessary software installed.  See
 ## Contributing
 
 See the
-[guidelines for contributions](https://github.com/ekr/draft-rescorla-semistatic-dh/blob/master/CONTRIBUTING.md).
+[guidelines for contributions](https://github.com/ekr/draft-rescorla-tls13-semistatic-dh/blob/master/CONTRIBUTING.md).
