@@ -35,6 +35,9 @@ author:
 
 normative:
   RFC2119:
+  I-D.ietf-tls-tls13:
+  I-D.ietf-httpbis-http2-secondary-certs:
+  I-D.ietf-tls-exported-authenticator:
 
 informative:
   SIGMA:
@@ -331,7 +334,8 @@ Bootstrapping resumption and early data encryption using semi-static key shares
 is only possible if (a) servers have a way to easily and safely publish
 these signed key shares and (b) clients can retrieve them. If semi-static
 key shares are carried in a delegated credential, clients may retrieve them
-via a HTTP/2 CERTIFICATE frame, which carries an Exported Authenticator. 
+via a HTTP/2 CERTIFICATE frame {{I-D.ietf-httpbis-http2-secondary-certs}}, 
+which carries an Exported Authenticator {{I-D.ietf-tls-exported-authenticator}}. 
 Also, depending on the use case, semi-static key shares may be pre-shared out-of-band
 as a replacement for (symmetric key) PSK+(EC)DHE key exchanges.
 
