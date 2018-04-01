@@ -56,7 +56,6 @@ informative:
          ins: H. Wee
 
 
-
 --- abstract
 
 TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
@@ -119,11 +118,16 @@ exchange in TLS 1.3, specifically:
   the existence of the communication. Note that it could always
   have denied the contents of the communication.
 
+* Clients may resume sessions, and encrypt early data, using a PSK 
+derived from its ephemeral key share and the server's semi-static key 
+share. Absent per-client semi-static key shares, this variant does not
+permit a server to track clients across resumptions.
+
 This exchange is not generally faster than a signed
 exchange if comparable groups are used. In fact, if delegated
 credentials are used, it may be slower on the client as it has
 to validate the delegated credential, though this operation
-is cacheable.
+may be cached.
 
 # Protocol Overview
 
@@ -155,8 +159,8 @@ Auth | {CertificateVerify*}
 
 As usual, the client and server each supply an (EC)DH share in their
 "key_share" extensions. However, in addition, the server supplies a
-static (EC)DH share in its Certificate message, either directly in
-its end-entity certificate or in a delegated credential. The client
+(signed) static (EC)DH share in its Certificate message, either directly 
+in its end-entity certificate or in a delegated credential. The client
 and server then perform two (EC)DH exchanges:
 
 - Between the client and server "key_share" values to form an
@@ -177,6 +181,16 @@ The handshake then proceeds as usual, except that:
 * SS is mixed into the key schedule at the last HKDF-Extract
   stage (where currently a 0 is used as the IKM input).
 
+Servers MAY convey an identity of its semi-static share in a Certificate
+message extension with the following code point:
+
+~~~
+enum {
+  ...
+  semi_static_identity(TBD),
+  (65535)
+} ExtensionType;
+~~~
 
 # Negotiation
 
@@ -266,7 +280,7 @@ is negotiated, that 0 is replaced with SS, as shown below.
 ~~~~
 
 
-# 0-RTT
+# 0-RTT and Resumption
 
 Clients in possession of a cached server's static share may use it to mix into
 the Early Secret computation. Specifically, let ESS be the output (EC)DHE
@@ -292,8 +306,36 @@ semi static key share. If the server cannot verify integrity of the early
 data, the server MUST reject early data, and follow remaining rules for 
 processing early data as outlined in {{I-D.ietf-tls-tls13}}.
 
-[[OPEN ISSUE]] Should the client instead send an explicit hint of the key share it used?
-[[OPEN ISSUE]] We don't know how to do bootstrap early data by publishing semi-static key shares.
+Clients indicate which semi-static key share they used for resumption
+and early data encryption by sending a PreSharedKeyExtension with
+a single offered PSK. This PSK MUST be constructed as follows:
+
+1. The PskIdentity identity field MUST carry the identity value provided 
+by the server upon receipt from a previous connection or, if no identity 
+was provided, the cryptographic hash of the semi-static key share value.
+2. An obfuscated_ticket_age field set to 0.
+
+To signal that semi-static key exchange was used, clients also use a new
+PskKeyExchangeMode, psk_ssks_ke(2) or psk_ssks_dhe_ke(3), as defined below:
+
+~~~
+enum { 
+  ...
+  psk_ssks_ke(2), 
+  psk_ssks_dhe_ke(1), 
+  (255) 
+} PskKeyExchangeMode;
+~~~
+
+Bootstrapping resumption and early data encryption using semi-static key shares
+is only possible if (a) servers have a way to easily and safely publish
+these signed key shares and (b) clients can retrieve them. If semi-static
+key shares are carried in a delegated credential, clients may retrieve them
+via a HTTP/2 CERTIFICATE frame, which carries an Exported Authenticator. 
+Also, depending on the use case, semi-static key shares may be pre-shared out-of-band
+as a replacement for (symmetric key) PSK+(EC)DHE key exchanges.
+
+[[OPEN ISSUE: discuss alternative, viable publishing strategies]]
 
 # Client Authentication
 
