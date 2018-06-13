@@ -324,8 +324,8 @@ PskKeyExchangeMode, psk_ssks_ke(2) or psk_ssks_dhe_ke(3), as defined below:
 ~~~
 enum { 
   ...
-  psk_ssks_ke(2), 
-  psk_ssks_dhe_ke(1), 
+  psk_ssks_ke(TODO), 
+  psk_ssks_dhe_ke(TODO+1), 
   (255) 
 } PskKeyExchangeMode;
 ~~~
@@ -351,7 +351,7 @@ in at all. Also, client DH keys seem even further off.
 
 # Security Considerations
 
-[[OPEN ISSUE: This is a -00, so the security considerations are kind of sketchy.]]
+[[OPEN ISSUE: This design requires formal analysis.]]
 
 - This is intended to have roughly equivalent security properties to current TLS 1.3,
 except for the points raised in the introduction.
