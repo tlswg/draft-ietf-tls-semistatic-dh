@@ -293,8 +293,8 @@ and the parent Certificate to be safely mixed into Early Secret. This is done as
 
 1. Let ESS be the output (EC)DHE output from the client's ephemeral key share and server's 
 semi-static key share.
-2. Let CertificateDigest = Hash(Certificate) be the hash digest of the parent certificate using the Hash
-algorithm chosen for early data encryption.
+2. Let CertificateDigest = Hash(Certificate) be the hash digest of the parent certificate 
+using the Hash algorithm associated with the ciphersuite chosen for early data encryption.
 
 Derivation of the Early Secret then becomes:
 
