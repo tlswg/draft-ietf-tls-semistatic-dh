@@ -27,7 +27,7 @@ author:
     ins: C. A. Wood
     name: Christopher A. Wood
     org: Apple Inc.
-    street: 1 Infinite Loop
+    street: One Apple Park Way
     city: Cupertino, California 95014
     country: United States of America
     email: cawood@apple.com
@@ -109,7 +109,7 @@ exchange in TLS 1.3, specifically:
 * It is more resistant to random number generation failures on
   the server because the attacker needs to have both the server's
   long-term (EC)DH key and the ephemeral (EC)DH key in order to
-  compute the traffic secrets. [Note: {{?I-D.cremers-cfrg-randomness-improvements}}
+  compute the traffic secrets. [Note: {{?I-D.irtf-cfrg-randomness-improvements}}
   describes a technique for accomplishing this with a signed exchange.]
 
 * If the server has a comparatively slow signing cert (e.g., P-256)
@@ -258,6 +258,7 @@ the handshake, one in CertificateVerify using SS and the other in
 Finished using the Master Secret. These MACs serve different
 purposes: the first authenticates the handshake and the second proves
 possession of the ephemeral secret.
+
 [[OPEN ISSUE: Verify that this is OK because neither MAC is computed
 with the mixed key. At least one version of OPTLS was somewhat like that,
 however.]]
@@ -285,13 +286,20 @@ is negotiated, that 0 is replaced with SS, as shown below.
 
 # 0-RTT and Resumption
 
-Clients in possession of a cached server's static share may use it to mix into
-the Early Secret computation. Specifically, let ESS be the output (EC)DHE
-output from the client's ephemeral key share and server's 
-semi-static key share. Derivation of the Early Secret then becomes:
+Clients may cache static shares for early data encryption. To prevent against Unknown 
+Key Share (UKS) attacks, this must be done carefully so that the client encrypts to a 
+peer who has proven possession in the past. Specifically, this requires the static share
+and the parent Certificate to be safely mixed into Early Secret. This is done as follows:
+
+1. Let ESS be the output (EC)DHE output from the client's ephemeral key share and server's 
+semi-static key share.
+2. Let CertificateDigest = Hash(Certificate) be the hash digest of the parent certificate using the Hash
+algorithm chosen for early data encryption.
+
+Derivation of the Early Secret then becomes:
 
 ~~~
-                 0
+          CertificateDigest
                  |
                  v
    ESS ->  HKDF-Extract = Early Secret
@@ -299,7 +307,7 @@ semi-static key share. Derivation of the Early Secret then becomes:
                  \/
 ~~~
 
-This emulates the OPTLS design wherein PSK is replaced with ESS for early
+This replicates the OPTLS design wherein PSK is replaced with ESS for early
 data encryption and binding.
 
 When a client uses a specific key share for early data, it MUST NOT send
@@ -347,7 +355,6 @@ as a replacement for (symmetric key) PSK+(EC)DHE key exchanges.
 with the client's DH key in Certificate and a MAC in CertificateVerity.
 However, it's less good because the client's static key doesn't get mixed
 in at all. Also, client DH keys seem even further off.
-
 
 # Security Considerations
 
