@@ -72,12 +72,15 @@ DH key which is used to authenticate the exchange.
 
 # Introduction
 
-DISCLAIMER: This is a work-in-progress draft and is currenty totally
-handwavy, so it has not yet seen significant security analysis. It
-should not be used as a basis for building production systems.
+DISCLAIMER: This is a work-in-progress draft and has not yet seen
+significant security analysis. Unilateral (server) authentication
+has been proven correct using a truncated variant of the TLS 1.3 -21
+Tamarin model. Neither early data nor client authentication have seen any
+security analysis. Thus, this draft should not be used as a basis for
+building production systems.
 
 TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
-exchange modelled after SIGMA {{SIGMA}}. This design is suitable for
+exchange modeled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
 common situation for current TLS servers, which is why it was
 selected for TLS 1.3.
@@ -93,7 +96,7 @@ in one of two ways:
 
 In these situations, a signed DH exchange is not appropriate, and
 instead a design in which the server authenticates via its long-term
-(EC)DH key is suitable. This document describes such a design modelled
+(EC)DH key is suitable. This document describes such a design modeled
 on that described in OPTLS {{KW16}}.
 
 This design has a number of potential advantages over the signed
@@ -121,15 +124,15 @@ exchange in TLS 1.3, specifically:
   the existence of the communication. Note that it could always
   have denied the contents of the communication.
 
-* Clients may resume sessions, and encrypt early data, using a PSK 
-derived from its ephemeral key share and the server's semi-static key 
+* Clients may resume sessions, and encrypt early data, using a PSK
+derived from its ephemeral key share and the server's semi-static key
 share. Absent per-client semi-static key shares, this variant does not
 permit a server to track clients across resumptions.
 
 This exchange is not generally faster than a signed
 exchange if comparable groups are used. In fact, if delegated
 credentials are used, it may be slower on the client as it has
-to validate the delegated credential, though this operation
+to validate the delegated credential, though the result
 may be cached.
 
 # Protocol Overview
@@ -162,7 +165,7 @@ Auth | {CertificateVerify*}
 
 As usual, the client and server each supply an (EC)DH share in their
 "key_share" extensions. However, in addition, the server supplies a
-(signed) static (EC)DH share in its Certificate message, either directly 
+(signed) static (EC)DH share in its Certificate message, either directly
 in its end-entity certificate or in a delegated credential. The client
 and server then perform two (EC)DH exchanges:
 
@@ -259,9 +262,6 @@ Finished using the Master Secret. These MACs serve different
 purposes: the first authenticates the handshake and the second proves
 possession of the ephemeral secret.
 
-[[OPEN ISSUE: Verify that this is OK because neither MAC is computed
-with the mixed key. At least one version of OPTLS was somewhat like that,
-however.]]
 
 ## Key Schedule
 
@@ -286,14 +286,14 @@ is negotiated, that 0 is replaced with SS, as shown below.
 
 # 0-RTT and Resumption
 
-Clients may cache static shares for early data encryption. To prevent against Unknown 
-Key Share (UKS) attacks, this must be done carefully so that the client encrypts to a 
+Clients may cache static shares for early data encryption. To prevent against Unknown
+Key Share (UKS) attacks, this must be done carefully so that the client encrypts to a
 peer who has proven possession in the past. Specifically, this requires the static share
 and the parent Certificate to be safely mixed into Early Secret. This is done as follows:
 
-1. Let ESS be the output (EC)DHE output from the client's ephemeral key share and server's 
+1. Let ESS be the output (EC)DHE output from the client's ephemeral key share and server's
 semi-static key share.
-2. Let CertificateDigest = Hash(Certificate) be the hash digest of the parent certificate 
+2. Let CertificateDigest = Hash(Certificate) be the hash digest of the parent certificate
 using the Hash algorithm associated with the ciphersuite chosen for early data encryption.
 
 Derivation of the Early Secret then becomes:
@@ -311,18 +311,18 @@ This replicates the OPTLS design wherein PSK is replaced with ESS for early
 data encryption and binding.
 
 When a client uses a specific key share for early data, it MUST NOT send
-more than one SignatureScheme value in its ClientHello. The chosen 
+more than one SignatureScheme value in its ClientHello. The chosen
 SignatureScheme value MUST match that which was in the cached server's
-semi static key share. If the server cannot verify integrity of the early 
-data, the server MUST reject early data, and follow remaining rules for 
+semi static key share. If the server cannot verify integrity of the early
+data, the server MUST reject early data, and follow remaining rules for
 processing early data as outlined in {{I-D.ietf-tls-tls13}}.
 
 Clients indicate which semi-static key share they used for resumption
 and early data encryption by sending a PreSharedKeyExtension with
 a single offered PSK. This PSK MUST be constructed as follows:
 
-1. The PskIdentity identity field MUST carry the identity value provided 
-by the server upon receipt from a previous connection or, if no identity 
+1. The PskIdentity identity field MUST carry the identity value provided
+by the server upon receipt from a previous connection or, if no identity
 was provided, the cryptographic hash of the semi-static key share value.
 2. An obfuscated_ticket_age field set to 0.
 
@@ -330,11 +330,11 @@ To signal that semi-static key exchange was used, clients also use a new
 PskKeyExchangeMode, psk_ssks_ke(2) or psk_ssks_dhe_ke(3), as defined below:
 
 ~~~
-enum { 
+enum {
   ...
-  psk_ssks_ke(TODO), 
-  psk_ssks_dhe_ke(TODO+1), 
-  (255) 
+  psk_ssks_ke(TODO),
+  psk_ssks_dhe_ke(TODO+1),
+  (255)
 } PskKeyExchangeMode;
 ~~~
 
@@ -342,8 +342,10 @@ Bootstrapping resumption and early data encryption using semi-static key shares
 is only possible if (a) servers have a way to easily and safely publish
 these signed key shares and (b) clients can retrieve them. If semi-static
 key shares are carried in a delegated credential, clients may retrieve them
-via a HTTP/2 CERTIFICATE frame {{I-D.ietf-httpbis-http2-secondary-certs}}, 
-which carries an Exported Authenticator {{I-D.ietf-tls-exported-authenticator}}. 
+via a HTTP/2 CERTIFICATE frame {{I-D.ietf-httpbis-http2-secondary-certs}},
+which carries an Exported Authenticator {{I-D.ietf-tls-exported-authenticator}}.
+Alternatively, servers may publish semi-static keys in DNS using a technique similar
+to that of ESNI; See {{?I-D.ietf-tls-esni}} for details for details.
 Also, depending on the use case, semi-static key shares may be pre-shared out-of-band
 as a replacement for (symmetric key) PSK+(EC)DHE key exchanges.
 
@@ -360,16 +362,12 @@ in at all. Also, client DH keys seem even further off.
 
 [[OPEN ISSUE: This design requires formal analysis.]]
 
-- This is intended to have roughly equivalent security properties to current TLS 1.3,
+This is intended to have roughly equivalent security properties to current TLS 1.3,
 except for the points raised in the introduction.
 
-- There are open questions about how much key mixing we want to do, especially with
-respect to client authentication.
+Open questions:
 
-- I'm not sure I like the double extract of SS. I've looked it over and
-  the SS-Base-Key and the HKDF-Extract to make the MS should be independent,
-  but I'd like to give it another look-over to see if there is a cleaner
-  way to do it.
+- Should semi-static key shares be mixed into the key schedule for client authentication?
 
 
 # IANA Considerations
