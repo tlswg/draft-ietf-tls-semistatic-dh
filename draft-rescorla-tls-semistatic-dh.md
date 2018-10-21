@@ -27,7 +27,7 @@ author:
     ins: C. A. Wood
     name: Christopher A. Wood
     org: Apple Inc.
-    street: 1 Infinite Loop
+    street: One Apple Park Way
     city: Cupertino, California 95014
     country: United States of America
     email: cawood@apple.com
@@ -35,6 +35,9 @@ author:
 
 normative:
   RFC2119:
+  I-D.ietf-tls-tls13:
+  I-D.ietf-httpbis-http2-secondary-certs:
+  I-D.ietf-tls-exported-authenticator:
 
 informative:
   SIGMA:
@@ -56,7 +59,6 @@ informative:
          ins: H. Wee
 
 
-
 --- abstract
 
 TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
@@ -70,12 +72,15 @@ DH key which is used to authenticate the exchange.
 
 # Introduction
 
-DISCLAIMER: This is a work-in-progress draft and is currenty totally
-handwavy, so it has not yet seen significant security analysis. It
-should not be used as a basis for building production systems.
+DISCLAIMER: This is a work-in-progress draft and has not yet seen
+significant security analysis. Unilateral (server) authentication
+has been proven correct using a truncated variant of the TLS 1.3 -21
+Tamarin model. Neither early data nor client authentication have seen any
+security analysis. Thus, this draft should not be used as a basis for
+building production systems.
 
 TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
-exchange modelled after SIGMA {{SIGMA}}. This design is suitable for
+exchange modeled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
 common situation for current TLS servers, which is why it was
 selected for TLS 1.3.
@@ -91,7 +96,7 @@ in one of two ways:
 
 In these situations, a signed DH exchange is not appropriate, and
 instead a design in which the server authenticates via its long-term
-(EC)DH key is suitable. This document describes such a design modelled
+(EC)DH key is suitable. This document describes such a design modeled
 on that described in OPTLS {{KW16}}.
 
 This design has a number of potential advantages over the signed
@@ -107,7 +112,7 @@ exchange in TLS 1.3, specifically:
 * It is more resistant to random number generation failures on
   the server because the attacker needs to have both the server's
   long-term (EC)DH key and the ephemeral (EC)DH key in order to
-  compute the traffic secrets. [Note: {{?I-D.cremers-cfrg-randomness-improvements}}
+  compute the traffic secrets. [Note: {{?I-D.irtf-cfrg-randomness-improvements}}
   describes a technique for accomplishing this with a signed exchange.]
 
 * If the server has a comparatively slow signing cert (e.g., P-256)
@@ -122,8 +127,8 @@ exchange in TLS 1.3, specifically:
 This exchange is not generally faster than a signed
 exchange if comparable groups are used. In fact, if delegated
 credentials are used, it may be slower on the client as it has
-to validate the delegated credential, though this operation
-is cacheable.
+to validate the delegated credential, though the result
+may be cached.
 
 # Protocol Overview
 
@@ -155,8 +160,8 @@ Auth | {CertificateVerify*}
 
 As usual, the client and server each supply an (EC)DH share in their
 "key_share" extensions. However, in addition, the server supplies a
-static (EC)DH share in its Certificate message, either directly in
-its end-entity certificate or in a delegated credential. The client
+(signed) static (EC)DH share in its Certificate message, either directly
+in its end-entity certificate or in a delegated credential. The client
 and server then perform two (EC)DH exchanges:
 
 - Between the client and server "key_share" values to form an
@@ -176,7 +181,6 @@ The handshake then proceeds as usual, except that:
 
 * SS is mixed into the key schedule at the last HKDF-Extract
   stage (where currently a 0 is used as the IKM input).
-
 
 # Negotiation
 
@@ -241,9 +245,7 @@ the handshake, one in CertificateVerify using SS and the other in
 Finished using the Master Secret. These MACs serve different
 purposes: the first authenticates the handshake and the second proves
 possession of the ephemeral secret.
-[[OPEN ISSUE: Verify that this is OK because neither MAC is computed
-with the mixed key. At least one version of OPTLS was somewhat like that,
-however.]]
+
 
 ## Key Schedule
 
@@ -265,6 +267,11 @@ is negotiated, that 0 is replaced with SS, as shown below.
 ...
 ~~~~
 
+# Early Data and Resumption
+
+[[OPEN ISSUE]] It seems like one ought to be able to publish the server's static
+key and use it for 0-RTT, but actually we don't know how to do the publication piece,
+so I think we should leave this out for now.
 
 # Client Authentication
 
@@ -273,28 +280,16 @@ with the client's DH key in Certificate and a MAC in CertificateVerity.
 However, it's less good because the client's static key doesn't get mixed
 in at all. Also, client DH keys seem even further off.
 
-
-# 0-RTT
-
-[[OPEN ISSUE]] It seems like one ought to be able to publish the server's
-static key and use it for 0-RTT, but actually we don't know how to
-do the publication piece, so I think we should leave this out for now.
-
-
 # Security Considerations
 
-[[OPEN ISSUE: This is a -00, so the security considerations are kind of sketchy.]]
+[[OPEN ISSUE: This design requires formal analysis.]]
 
-- This is intended to have roughly equivalent security properties to current TLS 1.3,
+This is intended to have roughly equivalent security properties to current TLS 1.3,
 except for the points raised in the introduction.
 
-- There are open questions about how much key mixing we want to do, especially with
-respect to client authentication.
+Open questions:
 
-- I'm not sure I like the double extract of SS. I've looked it over and
-  the SS-Base-Key and the HKDF-Extract to make the MS should be independent,
-  but I'd like to give it another look-over to see if there is a cleaner
-  way to do it.
+- Should semi-static key shares be mixed into the key schedule for client authentication?
 
 
 # IANA Considerations
