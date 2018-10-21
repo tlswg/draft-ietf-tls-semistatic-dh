@@ -124,11 +124,6 @@ exchange in TLS 1.3, specifically:
   the existence of the communication. Note that it could always
   have denied the contents of the communication.
 
-* Clients may resume sessions, and encrypt early data, using a PSK
-derived from its ephemeral key share and the server's semi-static key
-share. Absent per-client semi-static key shares, this variant does not
-permit a server to track clients across resumptions.
-
 This exchange is not generally faster than a signed
 exchange if comparable groups are used. In fact, if delegated
 credentials are used, it may be slower on the client as it has
@@ -186,17 +181,6 @@ The handshake then proceeds as usual, except that:
 
 * SS is mixed into the key schedule at the last HKDF-Extract
   stage (where currently a 0 is used as the IKM input).
-
-Servers MAY convey an identity of its semi-static share in a Certificate
-message extension with the following code point:
-
-~~~
-enum {
-  ...
-  semi_static_identity(TBD),
-  (65535)
-} ExtensionType;
-~~~
 
 # Negotiation
 
