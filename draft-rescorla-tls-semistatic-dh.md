@@ -73,11 +73,9 @@ DH key which is used to authenticate the exchange.
 # Introduction
 
 DISCLAIMER: This is a work-in-progress draft and has not yet seen
-significant security analysis. Unilateral (server) authentication
-has been mostly proven correct using a truncated variant of the TLS 1.3 -21
-Tamarin model. Neither early data nor client authentication have seen any
-security analysis. Thus, this draft should not be used as a basis for
-building production systems.
+significant security analysis. Analysis of the modified TLS 1.3 -21
+Tamarin model is currently underway. Thus, this draft should not be used as
+a basis for building production systems.
 
 TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
 exchange modeled after SIGMA {{SIGMA}}. This design is suitable for
