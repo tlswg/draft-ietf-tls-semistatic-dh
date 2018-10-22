@@ -74,7 +74,7 @@ DH key which is used to authenticate the exchange.
 
 DISCLAIMER: This is a work-in-progress draft and has not yet seen
 significant security analysis. Unilateral (server) authentication
-has been proven correct using a truncated variant of the TLS 1.3 -21
+has been mostly proven correct using a truncated variant of the TLS 1.3 -21
 Tamarin model. Neither early data nor client authentication have seen any
 security analysis. Thus, this draft should not be used as a basis for
 building production systems.
