@@ -73,8 +73,7 @@ DH key which is used to authenticate the exchange.
 # Introduction
 
 DISCLAIMER: This is a work-in-progress draft and has not yet seen
-significant security analysis. Analysis of the modified TLS 1.3 -21
-Tamarin model is currently underway. Thus, this draft should not be used as
+significant security analysis. Thus, this draft should not be used as
 a basis for building production systems.
 
 TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
@@ -265,12 +264,6 @@ is negotiated, that 0 is replaced with SS, as shown below.
 ...
 ~~~~
 
-# Early Data and Resumption
-
-[[OPEN ISSUE]] It seems like one ought to be able to publish the server's static
-key and use it for 0-RTT, but actually we don't know how to do the publication piece,
-so I think we should leave this out for now.
-
 # Client Authentication
 
 [[OPEN ISSUE]] In principle, we can do client authentication the same way,
@@ -288,7 +281,7 @@ except for the points raised in the introduction.
 Open questions:
 
 - Should semi-static key shares be mixed into the key schedule for client authentication?
-
+- Should we add support for early data encryption using a semi-static key?
 
 # IANA Considerations
 
