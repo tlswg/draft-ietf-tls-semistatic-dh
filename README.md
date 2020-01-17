@@ -2,9 +2,9 @@
 
 This is the working area for the IETF [TLS Working Group](https://datatracker.ietf.org/wg/tls/documents/) Internet-Draft, "Semi-Static Diffie-Hellman Key Establishment for TLS 1.3".
 
-* [Editor's Copy](https://ekr.github.io/draft-rescorla-tls13-semistatic-dh/#go.draft-ietf-tls-semistatic-dh.html)
+* [Editor's Copy](https://tlswg.github.io/draft-ietf-tls-semistatic-dh/#go.draft-ietf-tls-semistatic-dh.html)
 * [Working Group Draft](https://tools.ietf.org/html/draft-ietf-tls-semistatic-dh)
-* [Compare Editor's Copy to Working Group Draft](https://ekr.github.io/draft-rescorla-tls13-semistatic-dh/#go.draft-ietf-tls-semistatic-dh.diff)
+* [Compare Editor's Copy to Working Group Draft](https://tlswg.github.io/draft-ietf-tls-semistatic-dh/#go.draft-ietf-tls-semistatic-dh.diff)
 
 ## Building the Draft
 
@@ -21,4 +21,4 @@ This requires that you have the necessary software installed.  See
 ## Contributing
 
 See the
-[guidelines for contributions](https://github.com/ekr/draft-rescorla-tls13-semistatic-dh/blob/master/CONTRIBUTING.md).
+[guidelines for contributions](https://github.com/ekr/draft-ietf-tls-semistatic-dh/blob/master/CONTRIBUTING.md).
