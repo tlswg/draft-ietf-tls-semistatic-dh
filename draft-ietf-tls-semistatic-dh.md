@@ -32,13 +32,6 @@ author:
     country: United States of America
     email: cawood@apple.com
 
-
-normative:
-  RFC2119:
-  I-D.ietf-tls-tls13:
-  I-D.ietf-httpbis-http2-secondary-certs:
-  I-D.ietf-tls-exported-authenticator:
-
 informative:
   SIGMA:
        title: "SIGMA: the 'SIGn-and-MAc' approach to authenticated Diffie-Hellman and its use in the IKE protocols"
