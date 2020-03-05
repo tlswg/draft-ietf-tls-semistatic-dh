@@ -200,7 +200,7 @@ message, either directly in the EE certificate, or in a delegated
 credential. In either case, the OID for the SubjectPublicKeyInfo
 MUST be appropriate for use with (EC)DH key establishment. If
 in a certificate, the key usage and EKU MUST also be set appropriately.
-See {{?I-D.ietf-curdle-pkix}} for specific details about these formats.
+See {{!I-D.ietf-curdle-pkix}} for specific details about these formats.
 
 # Certificate Verify Computation {#cert-verify}
 
