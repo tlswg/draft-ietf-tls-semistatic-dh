@@ -1,7 +1,7 @@
 ---
 title: Semi-Static Diffie-Hellman Key Establishment for TLS 1.3
 abbrev: TLS 1.3 Semi-Static KX
-docname: draft-rescorla-tls13-semistatic-dh-latest
+docname: draft-ietf-tls-semistatic-dh-latest
 category: std
 
 ipr: trust200902
@@ -27,14 +27,7 @@ author:
     ins: C. A. Wood
     name: Christopher A. Wood
     org: Apple Inc.
-    street: 1 Infinite Loop
-    city: Cupertino, California 95014
-    country: United States of America
     email: cawood@apple.com
-
-
-normative:
-  RFC2119:
 
 informative:
   SIGMA:
@@ -56,10 +49,9 @@ informative:
          ins: H. Wee
 
 
-
 --- abstract
 
-TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
+TLS 1.3 {{!RFC8446}} specifies a signed Diffie-Hellman
 exchange modelled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
 common situation for current TLS servers. This document describes
@@ -70,12 +62,12 @@ DH key which is used to authenticate the exchange.
 
 # Introduction
 
-DISCLAIMER: This is a work-in-progress draft and is currenty totally
-handwavy, so it has not yet seen significant security analysis. It
-should not be used as a basis for building production systems.
+DISCLAIMER: This is a work-in-progress draft and has not yet seen
+significant security analysis. Thus, this draft should not be used as
+a basis for building production systems.
 
-TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
-exchange modelled after SIGMA {{SIGMA}}. This design is suitable for
+TLS 1.3 {{!RFC8446}} specifies a signed Diffie-Hellman (DH)
+exchange modeled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
 common situation for current TLS servers, which is why it was
 selected for TLS 1.3.
@@ -90,8 +82,8 @@ in one of two ways:
   credential {{!I-D.ietf-tls-subcerts}} containing an (EC)DH key.
 
 In these situations, a signed DH exchange is not appropriate, and
-instead a design in which the server authenticates via its long-term
-(EC)DH key is suitable. This document describes such a design modelled
+instead a design in which the endpoint authenticates via its long-term
+(EC)DH key is suitable. This document describes such a design modeled
 on that described in OPTLS {{KW16}}.
 
 This design has a number of potential advantages over the signed
@@ -104,28 +96,22 @@ exchange in TLS 1.3, specifically:
   if the (EC)DH key is in a delegated credential, but that allows
   for a clean transition to (EC)DH certificates.
 
-* It is more resistant to random number generation failures on
-  the server because the attacker needs to have both the server's
-  long-term (EC)DH key and the ephemeral (EC)DH key in order to
-  compute the traffic secrets. [Note: {{?I-D.cremers-cfrg-randomness-improvements}}
-  describes a technique for accomplishing this with a signed exchange.]
-
-* If the server has a comparatively slow signing cert (e.g., P-256)
+* If the endpoint has a comparatively slow signing cert (e.g., P-256)
   it can amortize that signature over a large number of connections
   by creating a delegated credential with an (EC)DH key from
   a faster group (e.g., X25519).
 
-* Because there is no signature, the server has deniability for
+* Because there is no signature, the endpoint has deniability for
   the existence of the communication. Note that it could always
   have denied the contents of the communication.
 
 This exchange is not generally faster than a signed
 exchange if comparable groups are used. In fact, if delegated
 credentials are used, it may be slower on the client as it has
-to validate the delegated credential, though this operation
-is cacheable.
+to validate the delegated credential, though the result
+may be cached.
 
-# Protocol Overview
+# Protocol Overview {#protocol}
 
 The overall protocol flow remains the same as that in ordinary TLS 1.3,
 as shown below:
@@ -155,8 +141,8 @@ Auth | {CertificateVerify*}
 
 As usual, the client and server each supply an (EC)DH share in their
 "key_share" extensions. However, in addition, the server supplies a
-static (EC)DH share in its Certificate message, either directly in
-its end-entity certificate or in a delegated credential. The client
+(signed) static (EC)DH share in its Certificate message, either directly
+in its end-entity certificate or in a delegated credential. The client
 and server then perform two (EC)DH exchanges:
 
 - Between the client and server "key_share" values to form an
@@ -169,16 +155,11 @@ and server then perform two (EC)DH exchanges:
 Note that this means that the server's static secret MUST be in
 the same group as selected group for the ephemeral (EC)DH exchange.
 
-The handshake then proceeds as usual, except that:
+The handshake then proceeds as usual, except that instead of
+containing a signature, the CertificateVerify contains a MAC of the
+handshake transcript, computed based on SS.
 
-* Instead of containing a signature, the CertificateVerify contains
-  a MAC of the handshake transcript, computed based on SS.
-
-* SS is mixed into the key schedule at the last HKDF-Extract
-  stage (where currently a 0 is used as the IKM input).
-
-
-# Negotiation
+# Negotiation {#negotiation}
 
 In order to negotiate this mode, we treat the (EC)DH MAC as if it were a
 signature and negotiate it with a set of new signature scheme values:
@@ -200,21 +181,20 @@ in "signature_algorithms_cert".
 
 Before sending and upon receipt, endpoints MUST ensure that the
 signature scheme is consistent with the ephemeral (EC)DH group
-in use.
+in use. Clients MUST NOT advertise signature scheme values
+that are inconsistent with the "named_groups" extension
+they offer.
 
 # Certificate Format
 
-Like signing keys, static DH keys are carried in the Certificate
+Similar to signing keys, static DH keys are carried in the Certificate
 message, either directly in the EE certificate, or in a delegated
 credential. In either case, the OID for the SubjectPublicKeyInfo
 MUST be appropriate for use with (EC)DH key establishment. If
-in a certificate, the key usage and EKU MUST also be set appropriately
-See {{I-D.ietf-curdle-pkix}} and [[TBD: P-256, etc.]] for specific
-details about these formats.
+in a certificate, the key usage and EKU MUST also be set appropriately.
+See {{!I-D.ietf-curdle-pkix}} for specific details about these formats.
 
-# Cryptographic Details
-
-## Certificate Verify Computation
+# Certificate Verify Computation {#cert-verify}
 
 Instead of a signature, the server proves knowledge of the private
 key associated with its static share by computing a MAC over the
@@ -225,14 +205,14 @@ messages up to and including Certificate, i.e.:
 Transcript-Hash(Handshake Context, Certificate)
 ~~~
 
-The MAC key -- SS-Base-Key -- is derived from SS as follows:
+The MAC key, xSS, is derived from SS as follows:
 
 ~~~~
-    SS-Base-Key = HKDF-Extract(0, SS)
+    xSS = HKDF-Extract(0, SS)
 ~~~~
 
 The MAC is then computed using the Finished computation described
-in {{I-D.ietf-tls-tls13}} Section 4.4, with SS-Base-Key as the
+in {{!RFC8446}} Section 4.4, with xSS as the
 Base Key value. Receivers MUST validate the MAC and terminate
 the handshake with a "decrypt_error" alert upon failure.
 
@@ -241,61 +221,32 @@ the handshake, one in CertificateVerify using SS and the other in
 Finished using the Master Secret. These MACs serve different
 purposes: the first authenticates the handshake and the second proves
 possession of the ephemeral secret.
-[[OPEN ISSUE: Verify that this is OK because neither MAC is computed
-with the mixed key. At least one version of OPTLS was somewhat like that,
-however.]]
-
-## Key Schedule
-
-The final HKDF-Extract stage of the TLS 1.3 key schedule has
-an HKDF-Extract with the IKM of 0. When static key exchange
-is negotiated, that 0 is replaced with SS, as shown below.
-
-~~~~
-...
-           Derive-Secret(., "derived", "")
-                 |
-                 v
-     SS -> HKDF-Extract = Master Secret
-                 |
-                 +-----> Derive-Secret(., "c ap traffic",
-                 |                     ClientHello...server Finished)
-                 |                     = client_application_traffic_secret_0
-                 |
-...
-~~~~
-
 
 # Client Authentication
 
-[[OPEN ISSUE]] In principle, we can do client authentication the same way,
-with the client's DH key in Certificate and a MAC in CertificateVerity.
-However, it's less good because the client's static key doesn't get mixed
-in at all. Also, client DH keys seem even further off.
+Client authentication works similar to that of server authentication described
+in {{protocol}}. In particular, servers indicate support of semi-static keys
+by sending one of the relevant SignatureScheme values defined in {{negotiation}}
+inside the CertificateRequest "signature_algorithms" extension. If applicable,
+clients reply with a non-empty Certificate message carrying a corresponding certificate
+with static DH key matching the chosen signature algorithm. Clients then also
+compute the CertificateVerify message using the procedure of 
+{{cert-verify}}, over the transcript hash Handshake Context
+described in {{!RFC8446}}, Section 4.4.
 
-
-# 0-RTT
-
-[[OPEN ISSUE]] It seems like one ought to be able to publish the server's
-static key and use it for 0-RTT, but actually we don't know how to
-do the publication piece, so I think we should leave this out for now.
-
+If no matching certificate is available, clients send an empty Certificate message as
+per {{!RFC8446}}; Section 4.4.2.
 
 # Security Considerations
 
-[[OPEN ISSUE: This is a -00, so the security considerations are kind of sketchy.]]
+[[OPEN ISSUE: This design requires formal analysis.]]
 
-- This is intended to have roughly equivalent security properties to current TLS 1.3,
+This is intended to have roughly equivalent security properties to current TLS 1.3,
 except for the points raised in the introduction.
 
-- There are open questions about how much key mixing we want to do, especially with
-respect to client authentication.
+Open questions:
 
-- I'm not sure I like the double extract of SS. I've looked it over and
-  the SS-Base-Key and the HKDF-Extract to make the MS should be independent,
-  but I'd like to give it another look-over to see if there is a cleaner
-  way to do it.
-
+- Should semi-static key shares be mixed into the key schedule?
 
 # IANA Considerations
 
@@ -306,4 +257,3 @@ a "recommended" value of TBD.
 
 
 --- back
-
