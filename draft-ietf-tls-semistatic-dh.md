@@ -238,9 +238,9 @@ by sending one of the relevant SignatureScheme values defined in {{negotiation}}
 inside the CertificateRequest "signature_algorithms" extension. If applicable,
 clients reply with a non-empty Certificate message carrying a corresponding certificate
 with static DH key matching the chosen signature algorithm. Clients then also
-change the computation of their CertificateVerify message to match described in
-{{cert-verify}}, with the exception that the transcript hash Handshake Context
-matches that described in {{!RFC8446}}, Section 4.4.
+compute the CertificateVerify message using the procedure of 
+{{cert-verify}}, over the transcript hash Handshake Context
+described in {{!RFC8446}}, Section 4.4.
 
 If no matching certificate is available, clients send an empty Certificate message as
 per {{!RFC8446}}; Section 4.4.2.
@@ -265,4 +265,3 @@ a "recommended" value of TBD.
 
 
 --- back
-
