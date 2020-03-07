@@ -27,9 +27,6 @@ author:
     ins: C. A. Wood
     name: Christopher A. Wood
     org: Apple Inc.
-    street: One Apple Park Way
-    city: Cupertino, California 95014
-    country: United States of America
     email: cawood@apple.com
 
 informative:
@@ -54,7 +51,7 @@ informative:
 
 --- abstract
 
-TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
+TLS 1.3 {{!RFC8446}} specifies a signed Diffie-Hellman
 exchange modelled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
 common situation for current TLS servers. This document describes
@@ -69,7 +66,7 @@ DISCLAIMER: This is a work-in-progress draft and has not yet seen
 significant security analysis. Thus, this draft should not be used as
 a basis for building production systems.
 
-TLS 1.3 {{!I-D.ietf-tls-tls13}} specifies a signed Diffie-Hellman
+TLS 1.3 {{!RFC8446}} specifies a signed Diffie-Hellman (DH)
 exchange modeled after SIGMA {{SIGMA}}. This design is suitable for
 endpoints whose certified credential is a signing key, which is the
 common situation for current TLS servers, which is why it was
@@ -120,7 +117,7 @@ credentials are used, it may be slower on the client as it has
 to validate the delegated credential, though the result
 may be cached.
 
-# Protocol Overview
+# Protocol Overview {#protocol}
 
 The overall protocol flow remains the same as that in ordinary TLS 1.3,
 as shown below:
@@ -172,7 +169,7 @@ The handshake then proceeds as usual, except that:
 * SS is mixed into the key schedule at the last HKDF-Extract
   stage (where currently a 0 is used as the IKM input).
 
-# Negotiation
+# Negotiation {#negotiation}
 
 In order to negotiate this mode, we treat the (EC)DH MAC as if it were a
 signature and negotiate it with a set of new signature scheme values:
@@ -198,17 +195,14 @@ in use.
 
 # Certificate Format
 
-Like signing keys, static DH keys are carried in the Certificate
+Similar to signing keys, static DH keys are carried in the Certificate
 message, either directly in the EE certificate, or in a delegated
 credential. In either case, the OID for the SubjectPublicKeyInfo
 MUST be appropriate for use with (EC)DH key establishment. If
-in a certificate, the key usage and EKU MUST also be set appropriately
-See {{I-D.ietf-curdle-pkix}} and [[TBD: P-256, etc.]] for specific
-details about these formats.
+in a certificate, the key usage and EKU MUST also be set appropriately.
+See {{!I-D.ietf-curdle-pkix}} for specific details about these formats.
 
-# Cryptographic Details
-
-## Certificate Verify Computation
+# Certificate Verify Computation {#cert-verify}
 
 Instead of a signature, the server proves knowledge of the private
 key associated with its static share by computing a MAC over the
@@ -219,14 +213,14 @@ messages up to and including Certificate, i.e.:
 Transcript-Hash(Handshake Context, Certificate)
 ~~~
 
-The MAC key -- SS-Base-Key -- is derived from SS as follows:
+The MAC key, xSS, is derived from SS as follows:
 
 ~~~~
-    SS-Base-Key = HKDF-Extract(0, SS)
+    xSS = HKDF-Extract(0, SS)
 ~~~~
 
 The MAC is then computed using the Finished computation described
-in {{I-D.ietf-tls-tls13}} Section 4.4, with SS-Base-Key as the
+in {{!RFC8446}} Section 4.4, with xSS as the
 Base Key value. Receivers MUST validate the MAC and terminate
 the handshake with a "decrypt_error" alert upon failure.
 
@@ -236,33 +230,20 @@ Finished using the Master Secret. These MACs serve different
 purposes: the first authenticates the handshake and the second proves
 possession of the ephemeral secret.
 
-
-## Key Schedule
-
-The final HKDF-Extract stage of the TLS 1.3 key schedule has
-an HKDF-Extract with the IKM of 0. When static key exchange
-is negotiated, that 0 is replaced with SS, as shown below.
-
-~~~~
-...
-           Derive-Secret(., "derived", "")
-                 |
-                 v
-     SS -> HKDF-Extract = Master Secret
-                 |
-                 +-----> Derive-Secret(., "c ap traffic",
-                 |                     ClientHello...server Finished)
-                 |                     = client_application_traffic_secret_0
-                 |
-...
-~~~~
-
 # Client Authentication
 
-[[OPEN ISSUE]] In principle, we can do client authentication the same way,
-with the client's DH key in Certificate and a MAC in CertificateVerity.
-However, it's less good because the client's static key doesn't get mixed
-in at all. Also, client DH keys seem even further off.
+Client authentication works similar to that of server authentication described
+in {{protocol}}. In particular, servers indicate support of semi-static keys
+by sending one of the relevant SignatureScheme values defined in {{negotiation}}
+inside the CertificateRequest "signature_algorithms" extension. If applicable,
+clients reply with a non-empty Certificate message carrying a corresponding certificate
+with static DH key matching the chosen signature algorithm. Clients then also
+compute the CertificateVerify message using the procedure of 
+{{cert-verify}}, over the transcript hash Handshake Context
+described in {{!RFC8446}}, Section 4.4.
+
+If no matching certificate is available, clients send an empty Certificate message as
+per {{!RFC8446}}; Section 4.4.2.
 
 # Security Considerations
 
@@ -273,8 +254,7 @@ except for the points raised in the introduction.
 
 Open questions:
 
-- Should semi-static key shares be mixed into the key schedule for client authentication?
-- Should we add support for early data encryption using a semi-static key?
+- Should semi-static key shares be mixed into the key schedule?
 
 # IANA Considerations
 
@@ -285,4 +265,3 @@ a "recommended" value of TBD.
 
 
 --- back
-
