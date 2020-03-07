@@ -82,7 +82,7 @@ in one of two ways:
   credential {{!I-D.ietf-tls-subcerts}} containing an (EC)DH key.
 
 In these situations, a signed DH exchange is not appropriate, and
-instead a design in which the server authenticates via its long-term
+instead a design in which the endpoint authenticates via its long-term
 (EC)DH key is suitable. This document describes such a design modeled
 on that described in OPTLS {{KW16}}.
 
@@ -96,18 +96,12 @@ exchange in TLS 1.3, specifically:
   if the (EC)DH key is in a delegated credential, but that allows
   for a clean transition to (EC)DH certificates.
 
-* It is more resistant to random number generation failures on
-  the server because the attacker needs to have both the server's
-  long-term (EC)DH key and the ephemeral (EC)DH key in order to
-  compute the traffic secrets. [Note: {{?I-D.irtf-cfrg-randomness-improvements}}
-  describes a technique for accomplishing this with a signed exchange.]
-
-* If the server has a comparatively slow signing cert (e.g., P-256)
+* If the endpoint has a comparatively slow signing cert (e.g., P-256)
   it can amortize that signature over a large number of connections
   by creating a delegated credential with an (EC)DH key from
   a faster group (e.g., X25519).
 
-* Because there is no signature, the server has deniability for
+* Because there is no signature, the endpoint has deniability for
   the existence of the communication. Note that it could always
   have denied the contents of the communication.
 
@@ -161,13 +155,9 @@ and server then perform two (EC)DH exchanges:
 Note that this means that the server's static secret MUST be in
 the same group as selected group for the ephemeral (EC)DH exchange.
 
-The handshake then proceeds as usual, except that:
-
-* Instead of containing a signature, the CertificateVerify contains
-  a MAC of the handshake transcript, computed based on SS.
-
-* SS is mixed into the key schedule at the last HKDF-Extract
-  stage (where currently a 0 is used as the IKM input).
+The handshake then proceeds as usual, except that instead of
+containing a signature, the CertificateVerify contains a MAC of the
+handshake transcript, computed based on SS.
 
 # Negotiation {#negotiation}
 
@@ -191,7 +181,9 @@ in "signature_algorithms_cert".
 
 Before sending and upon receipt, endpoints MUST ensure that the
 signature scheme is consistent with the ephemeral (EC)DH group
-in use.
+in use. Clients MUST NOT advertise signature scheme values
+that are inconsistent with the "named_groups" extension
+they offer.
 
 # Certificate Format
 
