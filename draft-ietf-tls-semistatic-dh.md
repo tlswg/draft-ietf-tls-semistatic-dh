@@ -247,6 +247,8 @@ per {{!RFC8446}}; Section 4.4.2.
 
 # Security Considerations
 
+[[OPEN ISSUE: This design requires formal analysis.]]
+
 This is intended to have roughly equivalent security properties to current TLS 1.3,
 except for the points raised in the introduction.
 
